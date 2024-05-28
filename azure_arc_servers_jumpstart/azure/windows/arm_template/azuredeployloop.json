@@ -244,7 +244,7 @@
             }
         },
         {
-            "name": "[if(not(parameters('deployBastion')), 'name1', 'name2')]",
+            "name": "[if(not(parameters('deployBastion')),concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip'))]",
             "copy":{
                 "name": "pipCopy",
                 "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
@@ -295,7 +295,7 @@
             "apiVersion": "2020-11-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "variables('bastionIpName')"
+                "[resourceId('Microsoft.Network/publicIPAddresses',variables('bastionIpName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
