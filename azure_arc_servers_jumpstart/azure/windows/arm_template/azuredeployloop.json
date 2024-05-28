@@ -244,7 +244,7 @@
             }
         },
         {
-            "name": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),variables('bastionIpName'))]",
+            "name": "[if(not(parameters('deployBastion')),'name1','name2')]",
             "copy":{
                 "name": "pipCopy",
                 "count": "[if(not(parameters('deployBastion')),parameters('vmCount'),1]"
