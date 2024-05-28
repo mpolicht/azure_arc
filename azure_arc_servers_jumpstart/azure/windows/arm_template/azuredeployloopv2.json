@@ -100,7 +100,7 @@
         "subnetAddressPrefix": "10.0.0.0/24",
         "addressPrefix": "10.0.0.0/16",
         "bastionSubnetIpPrefix": "10.0.1.64/26",
-        "bastionIpName" : "[concat(parameters('bastionHostName'),'-pip')]"
+        "publicIpAddressName": "[if(not(parameters('deployBastion')), concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip'))]"
     },
     "resources": [
         {
@@ -171,7 +171,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[concat(parameters('vmName'),copyIndex(),'-pip')]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -182,7 +182,9 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),json('null'))]"
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                            }
                         }
                     }
                 ]
@@ -295,7 +297,7 @@
             "apiVersion": "2020-11-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionIpName'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', if(not(parameters('deployBastion')), concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip')))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -306,7 +308,7 @@
                                 "id": "[variables('bastionSubnetRef')]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionIpName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
                             }
                         }
                      }
