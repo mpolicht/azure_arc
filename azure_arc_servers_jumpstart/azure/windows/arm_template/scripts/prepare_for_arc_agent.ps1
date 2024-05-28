@@ -5,7 +5,7 @@ param (
 #    [string]$tenantId,
 #    [string]$resourceGroup,
 #    [string]$location,
-#    [string]$adminUsername
+    [string]$adminUsername
 )
 
 # [System.Environment]::SetEnvironmentVariable('subscriptionId', $subscriptionId,[System.EnvironmentVariableTarget]::Machine)
