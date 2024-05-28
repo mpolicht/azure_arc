@@ -2,11 +2,25 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2s_v3",
+            "metadata": {
+                "description": "VM size"
+            }
+        },
         "vmName": {
             "type": "string",
-            "defaultValue": "arclab-win-vm0",
+            "defaultValue": "arclab-win-vm",
             "metadata": {
-                "description": "VM name"
+                "description": "VM name prefix"
+            }
+        },
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 2,
+            "metadata": {
+                "description": "Number of VMs"
             }
         },
         "adminUsername": {
@@ -19,7 +33,7 @@
         "adminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "VM user password"
+                "description": "VM admin password"
             }
         },
         "windowsOSVersion": {
@@ -47,13 +61,6 @@
             "defaultValue": "Arc-Win-Demo-Bastion",
             "metadata": {
                 "description": "Azure Bastion host name"
-            }
-        },
-        "vmSize": {
-            "type": "string",
-            "defaultValue": "Standard_D2s_v3",
-            "metadata": {
-                "description": "VM size"
             }
         },
         "virtualNetworkName": {
@@ -85,9 +92,6 @@
         }
     },
     "variables": {
-        "vmName": "[concat(parameters('vmName'))]",
-        "publicIpAddressName": "[concat(parameters('vmName'), '-pip' )]",
-        "networkInterfaceName": "[concat(parameters('vmName'),'-nic')]",
         "bastionSubnetName": "AzureBastionSubnet",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]",
         "bastionSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('bastionSubnetName'))]",
@@ -95,21 +99,78 @@
         "subnetAddressPrefix": "10.0.0.0/24",
         "addressPrefix": "10.0.0.0/16",
         "bastionName" : "[concat(parameters('bastionHostName'))]",
-        "bastionSubnetIpPrefix": "10.0.1.64/26",
-        "PublicIPNoBastion": {
-            "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-        }
+        "bastionSubnetIpPrefix": "10.0.1.64/26"
     },
     "resources": [
         {
+            "name": "[concat(parameters('vmName'),copyIndex())]",
+            "copy": {
+                "name": "VMcopy",
+                "count": "[parameters('vmCount')]"
+            },
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-03-01",
+            "location": "[parameters('location')]",
+            "comments": "Creating VMs",
+            "dependsOn": [
+                "[concat(parameters('vmName'),copyIndex(),'-nic')]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmName'),copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": false
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('windowsOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('vmName'),copyIndex(),'-OSDisk')]",
+                        "caching": "ReadWrite",
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[variables('osDiskType')]"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "properties": {
+                                "primary": true
+                            },
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'),copyIndex(),'-nic'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName'),copyIndex(),'-nic')]",
+            "copy":{
+                "name": "nicCopy",
+                "count": "[parameters('vmCount')]"
+            },
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2018-10-01",
-            "name": "[variables('networkInterfaceName')]",
             "location": "[parameters('location')]",
+            "comments": "Primary NIC",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                "[concat(parameters('vmName'),copyIndex(),'-pip')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -120,13 +181,10 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": "[if(not(parameters('deployBastion')),variables('PublicIPNoBastion'),json('null'))]"
+                            "publicIPAddress": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),json('null'))]"
                         }
                     }
-                ],
-                "networkSecurityGroup": {
-                    "id" : "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
-                }
+                ]
             }
         },
         {
@@ -170,6 +228,9 @@
                             "addressPrefix": "[variables('subnetAddressPrefix')]",
                             "privateEndpointNetworkPolicies": "Enabled",
                             "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "networkSecurityGroup": {
+                            "id" : "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
                         }
                     },
                     {
@@ -177,15 +238,20 @@
                         "properties": {
                             "addressPrefix": "[variables('bastionSubnetIpPrefix')]"
                         }
-                     }
+                    }
                 ]
             }
         },
         {
+            "name": "[concat(parameters('vmName'),copyIndex(),'-pip')]",
+            "copy":{
+                "name": "pipCopy",
+                "count": "[parameters('vmCount')]"
+            },
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
-            "name": "[variables('publicIpAddressName')]",
             "location": "[parameters('location')]",
+            "comments": "Primary NIC's PIP",
             "properties": {
                 "publicIpAllocationMethod": "Static",
                 "publicIPAddressVersion": "IPv4",
@@ -196,63 +262,17 @@
             }
         },
         {
-            "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2019-03-01",
-            "name": "[variables('vmName')]",
-            "location": "[parameters('location')]",
-            "tags": "[parameters('resourceTags')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[parameters('vmSize')]"
-                },
-                "storageProfile": {
-                    "osDisk": {
-                        "name": "[concat(variables('vmName'),'-OSDisk')]",
-                        "caching": "ReadWrite",
-                        "createOption": "fromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('osDiskType')]"
-                        }
-                    },
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "[parameters('windowsOSVersion')]",
-                        "version": "latest"
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
-                        }
-                    ]
-                },
-                "osProfile": {
-                    "computerName": "[variables('vmName')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]",
-                    "windowsConfiguration": {
-                        "provisionVMAgent": true,
-                        "enableAutomaticUpdates": false
-                    }
-                }
-            }
-        },
-        {
+            "name": "[concat(parameters('vmName'),copyIndex(),'/ClientTools')]",
+            "copy":{
+                "name": "extCopy",
+                "count": "[parameters('vmCount')]"
+            },
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('vmName'),'/ClientTools')]",
             "apiVersion": "2019-07-01",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+                "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('vmName'), copyIndex()))]"
             ],
-            "tags": {
-                "displayName": "Install Arc Agent"
-            },
             "properties": {
                 "publisher": "Microsoft.Compute",
                 "type": "CustomScriptExtension",
@@ -275,7 +295,6 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
                 "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
-
             ],
             "properties": {
                 "ipConfigurations": [
@@ -292,17 +311,8 @@
                      }
                 ]
             }
-        }
-        
+        }       
     ],
     "outputs": {
-        "adminUsername": {
-            "type": "string",
-            "value": "[parameters('adminUsername')]"
-        },
-        "publicIP": {
-            "type": "string",
-            "value": "[concat(reference(variables('publicIPAddressName')).IpAddress)]"
-        }
     }
 }
