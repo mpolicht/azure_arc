@@ -99,8 +99,7 @@
         "osDiskType": "Standard_LRS",
         "subnetAddressPrefix": "10.0.0.0/24",
         "addressPrefix": "10.0.0.0/16",
-        "bastionSubnetIpPrefix": "10.0.1.64/26",
-        "publicIpAddressName": "[if(not(parameters('deployBastion')), concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip'))]"
+        "bastionSubnetIpPrefix": "10.0.1.64/26"
     },
     "resources": [
         {
@@ -171,7 +170,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                "[concat(parameters('vmName'),copyIndex(),'-pip')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -182,9 +181,7 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
-                            }
+                            "publicIPAddress": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),json('null'))]"
                         }
                     }
                 ]
@@ -246,7 +243,7 @@
             }
         },
         {
-            "name": "[if(not(parameters('deployBastion')),concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip'))]",
+            "name": "[concat(parameters('vmName'), copyIndex(), '-pip')]",
             "copy":{
                 "name": "pipCopy",
                 "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
@@ -297,7 +294,7 @@
             "apiVersion": "2020-11-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', if(not(parameters('deployBastion')), concat(parameters('vmName'), copyIndex(), '-pip'), concat(parameters('bastionHostName'), '-pip')))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -308,7 +305,7 @@
                                 "id": "[variables('bastionSubnetRef')]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))]"
                             }
                         }
                      }
