@@ -182,7 +182,7 @@
                             },
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[if(not(parameters('deployBastion')), resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip')), json('null'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))]"
                             }
                         }
                     }
