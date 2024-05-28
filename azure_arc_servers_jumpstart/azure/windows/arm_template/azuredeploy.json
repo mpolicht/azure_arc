@@ -260,7 +260,7 @@
                 "autoUpgradeMinorVersion": true,
                 "protectedSettings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/mpolicht/azure_arc/main/azure_arc_servers_jumpstart/azure/windows/arm_template/scripts/install_arc_agent.ps1"
+                        "https://raw.githubusercontent.com/mpolicht/azure_arc/main/azure_arc_servers_jumpstart/azure/windows/arm_template/scripts/prepare_for_arc_agent.ps1"
                     ],
                     "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Bypass -File prepare_for_arc_agent.ps1', ' -adminUsername ', parameters('adminUsername'))]"
                 }
