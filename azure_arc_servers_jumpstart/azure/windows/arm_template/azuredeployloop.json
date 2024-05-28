@@ -52,6 +52,7 @@
         },
         "deployBastion": {
             "type": "bool",
+            "defaultValue": false,
             "metadata": {
                 "description": "Azure Bastion deployment"
             }
@@ -98,8 +99,8 @@
         "osDiskType": "Standard_LRS",
         "subnetAddressPrefix": "10.0.0.0/24",
         "addressPrefix": "10.0.0.0/16",
-        "bastionName" : "[concat(parameters('bastionHostName'))]",
-        "bastionSubnetIpPrefix": "10.0.1.64/26"
+        "bastionSubnetIpPrefix": "10.0.1.64/26",
+        "bastionIpName" : "[concat(parameters('bastionHostName'),'-pip']"
     },
     "resources": [
         {
@@ -243,7 +244,7 @@
             }
         },
         {
-            "name": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),concat(parameters('bastionHostName'),'-pip'))]",
+            "name": "[if(not(parameters('deployBastion')),concat(parameters('vmName'),copyIndex(),'-pip'),variables('bastionIpName'))]",
             "copy":{
                 "name": "pipCopy",
                 "count": "[if(not(parameters('deployBastion')),parameters('vmCount'),1]"
@@ -294,7 +295,7 @@
             "apiVersion": "2020-11-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "concat(parameters('bastionHostName'),'-pip')"
+                "variables('bastionIpName')"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -305,7 +306,7 @@
                                 "id": "[variables('bastionSubnetRef')]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('bastionHostName'),'-pip'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('bastionIpName'))]"
                             }
                         }
                      }
