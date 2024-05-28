@@ -228,9 +228,9 @@
                             "addressPrefix": "[variables('subnetAddressPrefix')]",
                             "privateEndpointNetworkPolicies": "Enabled",
                             "privateLinkServiceNetworkPolicies": "Enabled"
-                        },
-                        "networkSecurityGroup": {
-                            "id" : "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
+                            "networkSecurityGroup": {
+                               "id" : "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
+                            }
                         }
                     },
                     {
