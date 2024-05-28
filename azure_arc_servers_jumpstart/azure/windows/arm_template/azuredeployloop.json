@@ -247,7 +247,7 @@
             "name": "[if(not(parameters('deployBastion')),'name1','name2')]",
             "copy":{
                 "name": "pipCopy",
-                "count": "[if(not(parameters('deployBastion')),parameters('vmCount'),1]"
+                "count": "[if(not(parameters('deployBastion')),parameters('vmCount'),1)]"
             },
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
