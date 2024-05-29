@@ -168,8 +168,7 @@
             "location": "[parameters('location')]",
             "comments": "Primary NIC",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[concat(parameters('vmName'),copyIndex(),'-pip')]"
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -262,7 +261,7 @@
                 "idleTimeoutInMinutes": 4
             },
             "sku": {
-                "name": "[if(not(parameters('deployBastion')),'Basic','Standard')]"
+                "name": "[if(not(parameters('deployBastion')), 'Basic', 'Standard')]"
             }
         },
         {
