@@ -296,10 +296,10 @@
             }
         },
         {
+            "name": "[concat(parameters('bastionHostName'), '-pip')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "condition": "[parameters('deployBastion')]",
             "apiVersion": "2019-02-01",
-            "name": "[concat(parameters('vmName'), '0-pip')]",
             "location": "[parameters('location')]",
             "properties": {
                 "publicIPAllocationMethod": "Static",
