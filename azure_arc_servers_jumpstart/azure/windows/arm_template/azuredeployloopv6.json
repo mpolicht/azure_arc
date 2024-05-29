@@ -168,7 +168,8 @@
             "location": "[parameters('location')]",
             "comments": "Primary NIC",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -179,9 +180,7 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))]"
-                            }
+			    "publicIPAddress": "[if(not(parameters('deployBastion')), concat(parameters('vmName'), copyIndex(), '-pip'), json('null'))]"
                         }
                     }
                 ]
