@@ -180,7 +180,9 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": "[if(not(parameters('deployBastion')), reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))), json('null'))]"
+                            "publicIPAddress": {
+                                "id": "[if(not(parameters('deployBastion')), reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))), json('null'))]"
+                            }
                         }
                     }
                 ]
