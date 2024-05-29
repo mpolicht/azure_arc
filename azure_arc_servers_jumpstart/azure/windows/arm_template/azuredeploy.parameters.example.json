@@ -3,16 +3,26 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "vmSize": {
-      "value": "Standard_D2s_v3"
+      "value": "<VM size>"
     },
     "vmName": {
-      "value": "arclab-winvm"
+      "value": "<VM Name>"
+    },
+    "adminUsername": {
+      "value": "<Windows VM admin username>"
+    },
+    "adminPassword": {
+      "value": "<Windows VM admin password>"
     },
     "location": {
-      "value": "eastus"
+      "value": "<Azure region>"
     },
     "deployBastion": {
-        "value": false
+        "value": "<true | false>"
+    },
+    "bastionHostName": {
+      "value": "<Azure Bastion Host name>"
     }
   }
 }
+
