@@ -159,6 +159,7 @@
         },
         {
             "name": "[concat(parameters('vmName'),copyIndex(),'-nic')]",
+            "condition": "[parameters('deployBastion')]",
             "copy":{
                 "name": "nicCopy",
                 "count": "[parameters('vmCount')]"
@@ -179,8 +180,39 @@
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
                             },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName'),copyIndex(),'-nic')]",
+            "condition": "[not(parameters('deployBastion'))]",
+            "copy":{
+                "name": "nicCopy",
+                "count": "[parameters('vmCount')]"
+            },
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "comments": "Primary NIC",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+                "[concat(parameters('vmName'),copyIndex(),'-pip')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
                             "privateIPAllocationMethod": "Dynamic",
-			    "publicIPAddress": "[if(not(parameters('deployBastion')), reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip')), '2020-06-01').id, json('null'))]"
+                            "publicIPAddress": {
+                                "id": "[reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip')))]"
+                            }
                         }
                     }
                 ]
@@ -249,7 +281,7 @@
             "condition": "[not(parameters('deployBastion'))]",
             "copy":{
                 "name": "pipCopy",
-                "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
+                "count": "[parameters('vmCount')]"
             },
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
