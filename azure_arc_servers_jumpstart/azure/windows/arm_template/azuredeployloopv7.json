@@ -169,7 +169,7 @@
             "comments": "Primary NIC",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
+                "[concat(parameters('vmName'), copyIndex(), '-pip')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -180,9 +180,7 @@
                                 "id": "[variables('subnetRef')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[if(not(parameters('deployBastion')), resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip')), json('null'))]"
-                            }
+                            "publicIPAddress": "[if(not(parameters('deployBastion')), reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyIndex(), '-pip'))), json('null'))]"
                         }
                     }
                 ]
@@ -248,6 +246,7 @@
         },
         {
             "name": "[concat(parameters('vmName'), copyIndex(), '-pip')]",
+            "condition": "[not(parameters('deployBastion'))]",
             "copy":{
                 "name": "pipCopy",
                 "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
@@ -262,7 +261,22 @@
                 "idleTimeoutInMinutes": 4
             },
             "sku": {
-                "name": "[if(not(parameters('deployBastion')), 'Basic', 'Standard')]"
+                "name": "Basic"
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "condition": "[parameters('deployBastion')]",
+            "apiVersion": "2019-02-01",
+            "name": "[concat(parameters('bastionHostName'), '-pip')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            },
+            "sku": {
+                "name": "Standard"
             }
         },
         {
@@ -309,7 +323,7 @@
                                 "id": "[variables('bastionSubnetRef')]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('bastionHostName'), '-pip'))]"
                             }
                         }
                      }
