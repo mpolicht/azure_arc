@@ -250,7 +250,7 @@
             "name": "[concat(parameters('vmName'), copyIndex(), '-pip')]",
             "copy":{
                 "name": "pipCopy",
-                "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
+                "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 0)]"
             },
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
@@ -266,7 +266,7 @@
             }
         },
         {
-            "name": "[concat(parameters('vmName'),copyIndex(),'/ClientTools')]",
+            "name": "[concat(parameters('vmName'),copyIndex(),'/ArcPrep')]",
             "copy":{
                 "name": "extCopy",
                 "count": "[parameters('vmCount')]"
