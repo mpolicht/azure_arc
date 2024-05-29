@@ -6,16 +6,13 @@
       "value": "Standard_D2s_v3"
     },
     "vmName": {
-      "value": "arclab-win-vm0"
+      "value": "arclab-winvm"
     },
     "location": {
       "value": "eastus"
     },
     "deployBastion": {
         "value": false
-    },
-    "bastionHostName": {
-      "value": "arclab-bastion"
     }
   }
 }
