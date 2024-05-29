@@ -250,7 +250,7 @@
             "name": "[concat(parameters('vmName'), copyIndex(), '-pip')]",
             "copy":{
                 "name": "pipCopy",
-                "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 0)]"
+                "count": "[if(not(parameters('deployBastion')), parameters('vmCount'), 1)]"
             },
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2019-02-01",
@@ -298,7 +298,7 @@
             "apiVersion": "2020-11-01",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '1-pip'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -309,7 +309,7 @@
                                 "id": "[variables('bastionSubnetRef')]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '0-pip'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), '1-pip'))]"
                             }
                         }
                      }
